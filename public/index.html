@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Web-Chat App</title>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  </head>
+  <style type="text/css">
+
+  body { font: 13px Helvetica, Arial; }
+  form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+  form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+  #messages { list-style-type: none; margin: 0; padding: 0; }
+  form {padding: 1px; position: fixed; bottom: 0; width: 80%;margin-left:10% }
+  #messages li { padding: 5px 10px;border-radius: 10px;margin-bottom: 10px }
+  #messages li:nth-child(odd) { background: #284773;color:#FFF; }
+  #messages li:nth-child(even) { background: #D9D9D9; }
+  #messages a:nth-child(even) { background: #D9D9D9;padding: 5px 10px;border-radius: 10px;margin-bottom: 10px;margin-top: 10px ;display:block;}
+  #messages a:nth-child(odd) { background: #284773; padding: 5px 10px;border-radius: 10px;margin-bottom: 10px;display:block;color:#FFF;margin-top: 10px }
+  form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+   .chat-box{
+    /*border:solid #FFF 2px;*/
+   
+    padding: 0px;
+
+  }
+  body{
+    background-color:#f0f0f0; 
+  }
+  .header{
+    text-align: center;
+    font-size: 50px
+  }
+  .btn{
+    margin-left:10px;
+    margin-top:5px;
+    margin-bottom:5px;
+  }
+  </style>
+  <body>
+  <div class="header">Web-Chat</div>
+  <div class="container chat-box">
+    <canvas id="canvas"style="display:none"></canvas>
+    <ul id="messages"></ul>
+   </div> 
+  
+   <p id="filename"></p>
+    <form>
+    <input type="file"  id="imagefile" style="display:none" accept="image/*"/>
+    <div class="row "style="">
+      <div class="col-md-6 col-xs-6"><input id="m" autocomplete="off" style="border: 1px solid"placeholder="Type your message" /></div>
+      <div ><button class="btn  col-xs-2 col-md-2 "><i class="fa fa-paper-plane"></i></button></div>
+      <div><button class='btn col-md-2 col-xs-2' id="attach" > <i class="fa fa-paperclip"></i></button></div>
+    </div>
+    </form>
+ 
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+ 
+  $('#attach').click(function(){
+    $('#imagefile').click();
+    console.log($('#imagefile').val());
+  });
+  var socket = io();
+  var temp;
+  var image_drawn = false;
+  var c = 0;
+  $('form').submit(function(){
+    var dataUrl = canvas.toDataURL(); 
+    var temp_txt=$('#m').val();
+    if(temp_txt!='')socket.emit('from-client-txt', $('#m').val());
+    if(dataUrl!=temp&&image_drawn){socket.emit('image', dataUrl);}
+    $('#m').val('');
+    console.log();
+    $('#imagefile').val('');
+    temp = dataUrl;
+    c+=1;
+    console.log($('#imagefile').val());
+    return false;
+  });
+  socket.on('chat txt', function(msg){
+    $('#messages').append($('<li>').text(msg));
+  });
+  socket.on('chat image',function(img){
+    $('#messages').append($('<a>',{target:"_blank",href:img,style:"text-decoration:none"}).text("New-Image"));
+    });
+  var canvas = document.getElementById('canvas');
+  var ctx= canvas.getContext("2d");
+  var f = false;
+  function imageReader(){
+    if(this.files&&this.files[0]){
+      var fr = new FileReader();
+      fr.onload = function(e){
+        image_drawn=true;
+        var img = new Image();
+        img.onload = function(){
+        ctx.drawImage(img,0,0,img.width,img.height,0, 0,canvas.width, canvas.height);
+        };
+        img.src = e.target.result;
+      };
+      fr.readAsDataURL(this.files[0]);
+    }
+
+    f = true;
+  }
+  document.getElementById('imagefile').addEventListener('change',imageReader,false);
+   console.log($('#imagefile'));
+</script>
+  </body>
+</html>
